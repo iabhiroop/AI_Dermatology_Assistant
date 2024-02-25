@@ -14,6 +14,10 @@ router = APIRouter(
 
 @router.post("/")
 async def save_symptoms(data: SymptomData = Body(..., description="Image data")):
-    response = data
+    response = data.dict()
+    for i in response:
+        if len(response[i]) > 0 and i!="userid":
+            db_client.update_user_data(data.userid, {i: response[i]})
     print(data, type(data))
-    return "got it"
+    
+    return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content={"message": "data saved successfully."})

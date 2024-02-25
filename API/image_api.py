@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 import base64
 from PIL import Image
 from io import BytesIO
+from connections.mongo_db import db_client
 
 router = APIRouter(
     prefix="/image",
@@ -21,7 +22,10 @@ async def save_image(data: ImageData = Body(..., description="Image data")):
 
     image = Image.open(BytesIO(image_bytes))
 
-    image_path = "output.jpg"
+    image_filename = f"{data.userid}_image.jpg"
+    image_path = f"images/{image_filename}"
     image.save(image_path)
+
+    db_client.update_user_data(data.userid, {"image_path": image_path})
     
     return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content={"message": "Image saved successfully.", "image_path": image_path})

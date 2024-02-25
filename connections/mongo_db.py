@@ -79,5 +79,21 @@ class DB:
         }, {
             "$set": {"followUpQuestions": follow_ups},
         })
+    def update_user_data(self, userid, data):
+        # Check if the user already exists in the database
+        existing_user = self.db_client.find_one({"userid": userid})
+
+        if existing_user:
+            # If the user exists, update their data
+            self.db_client.update_one({"userid": userid}, {"$set": data})
+        else:
+            # If the user doesn't exist, insert a new document
+            data["userid"] = userid
+            self.db_client.insert_one(data)
+
+    def get_user_data(self, userid):
+        # Retrieve and return user data based on userid
+        user_data = self.db_client.find_one({"userid": userid})
+        return user_data
         
 db_client = DB()
