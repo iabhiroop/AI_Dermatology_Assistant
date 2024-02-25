@@ -4,6 +4,7 @@ import json
 from Schema.schema import SymptomData
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from connections.mongo_db import db_client
 
 router = APIRouter(
     prefix="/symptoms",
@@ -11,8 +12,8 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.post("/get")
+@router.post("/")
 async def save_symptoms(data: SymptomData = Body(..., description="Image data")):
     response = data
-    
-    return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content=response)
+    print(data, type(data))
+    return "got it"
