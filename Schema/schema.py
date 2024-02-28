@@ -13,7 +13,7 @@ class SymptomData(BaseModel):
     appearance: Optional[str] = Field("", description="")
     symptoms: Optional[str] = Field("", description="")
 
-class AnalyseData(BaseModel):
+class DBData(BaseModel):
     userid: Optional[str] = Field("", description="user id")
 
 class InitializeData(BaseModel):

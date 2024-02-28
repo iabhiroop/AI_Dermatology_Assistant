@@ -9,71 +9,68 @@ from datetime import datetime
 from openai import OpenAI
 from Constants.utils import get_chat_history_buffer_memory
 
+
+
+
 router = APIRouter(
     prefix="/chat",
     tags=["chat"],
     responses={404: {"description": "Not found"}},
 )
-client = OpenAI(base_url="https://e181-2402-3a80-428-c461-2484-fb60-97eb-ec72.ngrok-free.app/v1", api_key="not-needed")
+client = OpenAI(base_url="https://f3fc-115-244-132-22.ngrok-free.app/v1", api_key="not-needed")
 
 name = ""
 
 def generate_chat_completion(data):
-    room_id = data["userid"]
+    room_id = data["userid"]+"1234"
     prompt = data["query"]
-    room_data = db_client.get_last_history(room_id, 10)
+    room_data = db_client.get_last_history(room_id, 100)
     conversation_length = 0 if room_data is None else (len(room_data['history']) - 1)//2
-    print(room_data)
+    # print(room_data)
+    k=0
     if room_data is None:
-        conversation_response = f"Hi {name}, I am Derm AI. How can i help you?"
-
+        prompt = "Please ask me question to find out necessary symptoms. I would prefer you to use yes or no questions. At most short questions"
+        k=1
         new_room_data = {
             'roomid': room_id,
             'followUpQuestions': None,
             'history': [
-                {'role': "system", 'content': "You are a dermatology assistant. Only answer question from that", 'timestamp': str(datetime.now())},
+                {'role': "system", 'content': "You are a rude dermatology assistant. Keep the responses short. Ask the patient about symptoms, validate the model predictions and give a preliminary diagnosis. If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities: " + str(db_client.get_user_data(data["userid"])["diagnosis"]), 'timestamp': str(datetime.now())},
             ],
             'conversation_history': [
-                {'role': "assistant", 'content': conversation_response, 'timestamp': str(datetime.now())},
+                {'role': "assistant", 'content': "You are a dermatology assistant.", 'timestamp': str(datetime.now())},
             ],
         }
 
         db_client.create_room(new_room_data)
-        # history = [
-        #     {'role': "assistant", 'content': "Hi, I am Derm AI. How can i help you?", 'timestamp': str(datetime.now())},
-        # ]
-
-        # db_client.append_message_to_room(room_id, history,str(datetime.now()))
-        
-        return conversation_response
+        room_data = db_client.get_last_history(room_id, 100)
+    if prompt == "":
+        return ""
+    his_data = room_data["history"][1:]
+    base_system = [{'role': "system", 'content': "You are a rude dermatology assistant. Keep the responses short. Ask the patient about symptoms, validate the model predictions and give a preliminary diagnosis. If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities: " + str(db_client.get_user_data(data["userid"])["diagnosis"])}]
+    if k==0:
+        message = base_system + [{'role': entry['role'], 'content': entry['content']} for entry in his_data[-20:]]
     else:
-        message = [{'role': entry['role'], 'content': entry['content']} for entry in room_data["history"]]
-        message.append({'role': "user", 'content': prompt})
-        print(message)
-        completion = client.chat.completions.create(
-        model="local-model",
-        messages= message,
-        # [
-            # {"role": "system", "content": "Always use medical terms."},
-            # {"role": "user", "content": "Introduce yourself."},
-            # {"role": "assistant", "content": "I am Bot."},
-            # {"role": "user", "content": "What am I?"}
-        # ],
-        temperature=0.7,
-        )
+        message = base_system
+    message.append({'role': "user", 'content': prompt})
+    print(message)
+    completion = client.chat.completions.create(
+    model="local-model",
+    messages= message,
+    temperature=0.7,
+    )
 
-        print(completion.choices[0].message)
-        conversation_response = completion.choices[0].message.content
-        if conversation_response == "":
-            conversation_response = "513 Bad response"
-        history = [
-            {'role': "user", 'content': prompt, 'timestamp': str(datetime.now())},
-            {'role': "assistant", 'content': conversation_response, 'timestamp': str(datetime.now())},
-        ]
-
-        db_client.append_message_to_room(room_id, history,str(datetime.now()))
-        
-        return conversation_response
+    print(completion.choices[0].message)
+    conversation_response = completion.choices[0].message.content
+    if conversation_response == "":
+        conversation_response = "513 Bad response"
+    history = [
+        {'role': "user", 'content': prompt, 'timestamp': str(datetime.now())},
+        {'role': "assistant", 'content': conversation_response, 'timestamp': str(datetime.now())},
+    ]
+    db_client.append_message_to_room(room_id, history,str(datetime.now()))
+    
+    return conversation_response
 
 
 @router.post("/initialize")
@@ -85,5 +82,10 @@ async def intialize_user_chat(data: InitializeData = Body(..., description="Imag
 @router.post("/query")
 async def chat_completion(data: ChatData = Body(..., description="Image data")):
     response = generate_chat_completion(data.dict())
-    
-    return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content=response)
+    # response = dict(db_client.get_user_data(data.userid))
+    # del response["_id"]
+    print("Outside")
+    print(response)
+    print()
+    # return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content=response)
+    return response

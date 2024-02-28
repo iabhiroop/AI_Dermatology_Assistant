@@ -95,5 +95,17 @@ class DB:
         # Retrieve and return user data based on userid
         user_data = self.db_client.find_one({"userid": userid})
         return user_data
+    
+    def get_user_room(self, userid):
+        # Retrieve and return user data based on userid
+        user_data = self.db_client.find_one({"roomid": userid})
+        return user_data
+    
+    def delete_documents_by_userid(self, user_id):
+        self.db_client.delete_many({"userid": user_id})
+    
+    def delete_documents_by_roomid(self, user_id):
+        self.db_client.delete_many({"roomid": user_id})
+         # Return the number of deleted 
         
 db_client = DB()
