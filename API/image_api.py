@@ -38,7 +38,7 @@ async def save_image(data: ImageData = Body(..., description="Image data")):
     
     try:
         
-        response = requests.post("https://c1e8-2401-4900-4aab-b04-2d11-a953-a726-24d0.ngrok-free.app/hehe", data = json.dumps({"image":encode_image_to_base64(image_path)}))
+        response = requests.post("https://9903-2401-4900-4aab-b04-d891-eaff-196a-fb44.ngrok-free.app/hehe", data = json.dumps({"image":encode_image_to_base64(image_path)}))
         
         if response.status_code == 202:
             response_data = eval(response.content.decode('utf-8'))

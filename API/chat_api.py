@@ -17,7 +17,7 @@ router = APIRouter(
     tags=["chat"],
     responses={404: {"description": "Not found"}},
 )
-client = OpenAI(base_url="https://f3fc-115-244-132-22.ngrok-free.app/v1", api_key="not-needed")
+client = OpenAI(base_url="https://1eca-115-244-132-22.ngrok-free.app/v1", api_key="not-needed")
 
 name = ""
 
@@ -29,13 +29,13 @@ def generate_chat_completion(data):
     # print(room_data)
     k=0
     if room_data is None:
-        prompt = "Please ask me question to find out necessary symptoms. I would prefer you to use yes or no questions. At most short questions"
+        prompt = "Please ask me questions to find out necessary symptoms. Ask based on the model output"
         k=1
         new_room_data = {
             'roomid': room_id,
             'followUpQuestions': None,
             'history': [
-                {'role': "system", 'content': "You are a rude dermatology assistant. Keep the responses short. Ask the patient about symptoms, validate the model predictions and give a preliminary diagnosis. If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities: " + str(db_client.get_user_data(data["userid"])["diagnosis"]), 'timestamp': str(datetime.now())},
+                {'role': "system", 'content': "You are a smart dermatology assistant. Keep the responses short. Ask the patient about symptoms, validate the model predictions and give a preliminary diagnosis. If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities and choose the most likely one: " + str(db_client.get_user_data(data["userid"])["diagnosis"]), 'timestamp': str(datetime.now())},
             ],
             'conversation_history': [
                 {'role': "assistant", 'content': "You are a dermatology assistant.", 'timestamp': str(datetime.now())},
@@ -47,7 +47,7 @@ def generate_chat_completion(data):
     if prompt == "":
         return ""
     his_data = room_data["history"][1:]
-    base_system = [{'role': "system", 'content': "You are a rude dermatology assistant. Keep the responses short. Ask the patient about symptoms, validate the model predictions and give a preliminary diagnosis. If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities: " + str(db_client.get_user_data(data["userid"])["diagnosis"])}]
+    base_system = [{'role': "system", 'content': "You are a smart dermatology assistant. Keep the responses short. Ask the patient about symptoms, validate the model predictions and give a preliminary diagnosis. If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities: " + str(db_client.get_user_data(data["userid"])["diagnosis"])}]
     if k==0:
         message = base_system + [{'role': entry['role'], 'content': entry['content']} for entry in his_data[-20:]]
     else:
