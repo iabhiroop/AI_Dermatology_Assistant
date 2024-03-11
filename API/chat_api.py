@@ -28,8 +28,8 @@ router = APIRouter(
     tags=["chat"],
     responses={404: {"description": "Not found"}},
 )
-cli = oai(base_url="https://8c77-115-244-132-22.ngrok-free.app/v1", api_key="not-needed")
-mydir = os.path.join(os.getcwd(),'data','acne.txt')
+cli = oai(base_url="https://c8db-115-244-132-22.ngrok-free.app/v1", api_key="not-needed")
+mydir = os.path.join(os.getcwd(),'data','ayurvedha.txt')
 name = ""
 loader = TextLoader(mydir, autodetect_encoding=True)
 data = loader.load()
@@ -60,13 +60,20 @@ def enter_question(question):
         l.append(chunk)
     return "".join(l)
 
+def check_for_words(string, word_list=["hgdhfdhgfsgsgdasgrs"]):
+    for word in word_list:
+        if word in string:
+            return True
+    return False
+
+
 def generate_chat_completion(data):
     room_id = data["userid"]+"1234"
     prompt = data["query"]
-    if prompt[-2:] == ":-":
+    if check_for_words(prompt):
         if prompt == "":
             return ""
-        conversation_response = enter_question(prompt[:-2])
+        # conversation_response = enter_question(prompt[:-2])
     else:
         
         room_data = db_client.get_last_history(room_id, 100)
@@ -74,13 +81,13 @@ def generate_chat_completion(data):
         # print(room_data)
         k=0
         if room_data is None:
-            prompt = "Please ask me question to find out necessary symptoms. I would prefer you to use yes or no questions one at a time. At most short questions"
+            prompt = "Please ask me question to find out necessary symptoms. I would prefer you use symptom questions one at a time. Use short questions"
             k=1
             new_room_data = {
                 'roomid': room_id,
                 'followUpQuestions': None,
                 'history': [
-                    {'role': "system", 'content': "You are a calm dermatology assistant. Keep the responses short. Ask the patient about symptoms prefered only one question at a time, validate the model predictions and give a preliminary diagnosis. If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities: " + str(db_client.get_user_data(data["userid"])["diagnosis"]) + "Dont explicitly mention the disease while asking questions. Ask for symptoms and try to crossout the diseases. Once you are confident with your diagnosis reveal. Dont ask all questions at a same time ask a question, wait for the response and give the next question and try to sort the question by priority. If asked to explain answer with reasons and symptoms. If you decide on the disease, end the response with **disease**. Example: if you decide on acne, end with **acne** '", 'timestamp': str(datetime.now())},
+                    {'role': "system", 'content': "You are a calm dermatology assistant. Keep the responses short. Assume that the user does not understand dermatology so try to explain the terms. Ask the patient about symptoms prefered only one question at a time, validate the model predictions and give a preliminary diagnosis. If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Do not ask the user to decide the disease only ask about symptoms and decide on your own. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities: " + str(db_client.get_user_data(data["userid"])["diagnosis"]), 'timestamp': str(datetime.now())},
                 ],
                 'conversation_history': [
                     {'role': "assistant", 'content': "You are a dermatology assistant.", 'timestamp': str(datetime.now())},
@@ -90,14 +97,14 @@ def generate_chat_completion(data):
             db_client.create_room(new_room_data)
             room_data = db_client.get_last_history(room_id, 100)
         his_data = room_data["history"][1:]
-        base_system = [{'role': "system", 'content': "You are a smart dermatology assistant. Keep the responses short. Ask the patient about symptoms, validate the model predictions and give a preliminary diagnosis. If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities: " + str(db_client.get_user_data(data["userid"])["diagnosis"])}]
+        base_system = [{'role': "system", 'content': """You are a smart dermatology assistant. Keep the responses short. Assume that the user does not understand dermatology so try to explain the terms. Do not ask the user to decide the disease only ask about symptoms and decide on your own. Ask the patient about symptoms, validate the model predictions and give a preliminary diagnosis.  If the user's symptoms don't match to any of the diseases, explain that if they still feel sick to visit a dermatologist. Four models gives the following output for the patient where keys under 0 is more relevant than those under 1 are less revelent. Only ask question to confirm the disease from these possibilities: """ + str(db_client.get_user_data(data["userid"])["diagnosis"])}]
         if k==0:
             message = base_system + [{'role': entry['role'], 'content': entry['content']} for entry in his_data[-20:]]
         else:
             message = base_system
         message.append({'role': "user", 'content': prompt})
         print(message)
-        client = OpenAI(base_url="https://8c77-115-244-132-22.ngrok-free.app/v1", api_key="not-needed")
+        client = OpenAI(base_url="https://c8db-115-244-132-22.ngrok-free.app/v1", api_key="not-needed")
         completion = client.chat.completions.create(
         model="local-model",
         messages= message,

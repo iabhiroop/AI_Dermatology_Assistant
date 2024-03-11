@@ -33,12 +33,12 @@ async def save_image(data: ImageData = Body(..., description="Image data")):
     image_filename = f"{data.userid}_image.jpg"
     image_path = f"images/{image_filename}"
     image.save(image_path)
-
+    print("image_saved")
     db_client.update_user_data(data.userid, {"image_path": image_path})
     
     try:
         
-        response = requests.post("https://9501-115-244-132-22.ngrok-free.app/hehe", data = json.dumps({"image":encode_image_to_base64(image_path)}))
+        response = requests.post("https://c020-115-244-132-22.ngrok-free.app/hehe", data = json.dumps({"image":encode_image_to_base64(image_path)}))
         
         if response.status_code == 202:
             response_data = eval(response.content.decode('utf-8'))
