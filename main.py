@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from API import image_api, symptoms_api, analyse_api, chat_api
+from API import db_api, image_api, symptoms_api, chat_api
 
 app = FastAPI()
 
@@ -15,7 +15,7 @@ app.add_middleware(
 
 app.include_router(image_api.router)
 app.include_router(symptoms_api.router)
-app.include_router(analyse_api.router)
+app.include_router(db_api.router)
 app.include_router(chat_api.router)
 
 @app.get("/")
